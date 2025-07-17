@@ -2,9 +2,6 @@ from PyQt5.QtWidgets import QWidget,QPushButton,QVBoxLayout,QHBoxLayout,QSpinBox
 import pyqtgraph as pg
 import numpy as np
 import random as rd
-from PyQt5.QtGui import QPainter, QPen, QPainterPath
-from PyQt5.QtCore import QPointF
-from PyQt5 import QtGui
 
 class StartWindow(QWidget):
         
@@ -88,17 +85,25 @@ class NetworkWindow(QWidget):
         win = pg.GraphicsLayoutWidget(show=True)
         view = win.addViewBox()
         view.setAspectLocked()
-        # Create a GraphItem
-        graph = pg.GraphItem()
-        
+
+        graph = pg.GraphItem() 
+        # distribute agents randomly  
+        agents = list()     
         pos = np.empty((0,2),dtype=int)
-        nodeLabels = list()
         for i in range(self.sim.agents):
             x = rd.randint(0,100)
             y = rd.randint(0,100)
-            newAg = np.array([[x,y]])
-            pos = np.vstack([pos,newAg])
-            nodeLabels.append(round(rd.uniform(0.00,1.00),2))
+            posPair = np.array([[x,y]])
+            if self.sim.influencers > i:
+                roleStr = "influencer"
+            elif self.sim.influencers + self.sim.experts > i:
+                roleStr = "expert"
+            else:
+                roleStr = "agent"
+            val = round(rd.uniform(0.00,1.00),2) if roleStr != "expert" else self.sim.truth
+            agents.append(Agent(posPair,roleStr,val))
+            pos = np.vstack([pos,posPair])
+        # connect agents randomly
         adj = np.empty((0,2),dtype=int)
         for i in range(self.sim.connections):
             x = rd.randint(0,self.sim.agents-1)
@@ -117,19 +122,21 @@ class NetworkWindow(QWidget):
         )
         view.addItem(graph)
 
+
         # Add labels as TextItem
-        for i, label in enumerate(nodeLabels):
-            text = pg.TextItem(str(label), anchor=(0.5, 0.5), color='r')
-            text.setPos(pos[i][0], pos[i][1])
+        for agent in agents:
+            text = pg.TextItem(str(agent.startValue), anchor=(0.5, 0.5), color=agent.color)
+            text.setPos(agent.pos[0][0], agent.pos[0][1])
             view.addItem(text)
 
+        # add arrows to indicate direction of connection
         for i, j in adj:
             p1 = pos[i]
             p2 = pos[j]
             dx, dy = p2 - p1
             angle = 180 - float(np.degrees(np.arctan2(dy, dx)))
             arrowPos = p1 + 0.5 * (p2 - p1)
-            arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush='r')
+            arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush='b')
             view.addItem(arrow)
 
         # Buttons Section
@@ -167,3 +174,16 @@ class Simulation():
         self.experts = experts
         self.connections = connections
         self.truth = truth
+
+class Agent():
+
+    def __init__(self,position,role,startValue):
+        self.pos = position
+        self.role = role
+        self.startValue = startValue
+        if role == "influencer":
+            self.color = 'r'
+        elif role == "expert":
+            self.color = 'g'
+        else:
+            self.color = 'b'
