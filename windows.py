@@ -101,16 +101,19 @@ class NetworkWindow(QWidget):
             else:
                 roleStr = "agent"
             val = round(rd.uniform(0.00,1.00),2) if roleStr != "expert" else self.sim.truth
-            agents.append(Agent(posPair,roleStr,val))
+            agents.append(Agent(posPair,roleStr,val,i))
             pos = np.vstack([pos,posPair])
+        
         # connect agents randomly
         adj = np.empty((0,2),dtype=int)
         for i in range(self.sim.connections):
-            x = rd.randint(0,self.sim.agents-1)
-            y = rd.randint(0,self.sim.agents-1)
-            newConn = np.array([[x,y]])
+            agent1Index = rd.randint(0,len(agents)-1)
+            agent2Index = rd.randint(0,len(agents)-1)
+            agents[agent1Index].connectedAgents.append(agent2Index)
+            # todo: umgang mit zufälligen influencern ???
+            newConn = np.array([[agent1Index,agent2Index]])
             adj = np.vstack([adj,newConn])
-        
+
         # Provide dummy symbols so nodes are visible
         graph.setData(
             pos=pos,
@@ -174,10 +177,11 @@ class Simulation():
         self.experts = experts
         self.connections = connections
         self.truth = truth
+        self.connForInf = round(0.2*agents,0)
 
 class Agent():
 
-    def __init__(self,position,role,startValue):
+    def __init__(self,position,role,startValue,index):
         self.pos = position
         self.role = role
         self.startValue = startValue
@@ -187,3 +191,5 @@ class Agent():
             self.color = 'g'
         else:
             self.color = 'b'
+        self.connectedAgents = list()
+        self.index = index
