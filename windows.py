@@ -90,13 +90,7 @@ class NetworkWindow(QWidget):
         view.setAspectLocked()
         # Create a GraphItem
         graph = pg.GraphItem()
-        """
-        influencer: connected mit mehr als 10 % aller Agenten
-        anzahl an connections festlegen
-
-        1) netztwerk mit richitger anzahl an agenten und Verbindungen
-        2) Anzahl an influencern und experten anpassen
-        """
+        
         pos = np.empty((0,2),dtype=int)
         nodeLabels = list()
         for i in range(self.sim.agents):
@@ -128,6 +122,15 @@ class NetworkWindow(QWidget):
             text = pg.TextItem(str(label), anchor=(0.5, 0.5), color='r')
             text.setPos(pos[i][0], pos[i][1])
             view.addItem(text)
+
+        for i, j in adj:
+            p1 = pos[i]
+            p2 = pos[j]
+            dx, dy = p2 - p1
+            angle = 180 - float(np.degrees(np.arctan2(dy, dx)))
+            arrowPos = p1 + 0.5 * (p2 - p1)
+            arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush='r')
+            view.addItem(arrow)
 
         # Buttons Section
         addInfButton = QPushButton("Add Influencer",self)
