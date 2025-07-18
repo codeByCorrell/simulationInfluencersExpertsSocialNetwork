@@ -109,9 +109,12 @@ class NetworkWindow(QWidget):
         for i in range(self.sim.connections):
             agent1Index = rd.randint(0,len(agents)-1)
             agent2Index = rd.randint(0,len(agents)-1)
-            agents[agent1Index].connectedAgents.append(agent2Index)
-            # todo: umgang mit zufälligen influencern ???
-            newConn = np.array([[agent1Index,agent2Index]])
+            if len(agents[agent2Index].followers) < self.sim.connLim and agent1Index != agent2Index:
+                agents[agent1Index].rolemodels.append(agents[agent2Index])
+                agents[agent2Index].followers.append(agents[agent1Index])
+                newConn = np.array([[agent1Index,agent2Index]])
+            else:
+                newConn = np.array([[agent1Index,agent1Index]])
             adj = np.vstack([adj,newConn])
 
         # Provide dummy symbols so nodes are visible
@@ -137,9 +140,15 @@ class NetworkWindow(QWidget):
             p1 = pos[i]
             p2 = pos[j]
             dx, dy = p2 - p1
+            # check if self loop
+            if dx == 0 and dy == 0:
+                brushCol = 'r'
+                arrowPos = p1 - np.array([1,0])
+            else:
+                brushCol = 'b'
+                arrowPos = p1 + 0.95 * (p2 - p1)
             angle = 180 - float(np.degrees(np.arctan2(dy, dx)))
-            arrowPos = p1 + 0.5 * (p2 - p1)
-            arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush='b')
+            arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush=brushCol)
             view.addItem(arrow)
 
         # Buttons Section
@@ -177,7 +186,7 @@ class Simulation():
         self.experts = experts
         self.connections = connections
         self.truth = truth
-        self.connForInf = round(0.2*agents,0)
+        self.connLim = round(0.2*agents,0)
 
 class Agent():
 
@@ -191,5 +200,6 @@ class Agent():
             self.color = 'g'
         else:
             self.color = 'b'
-        self.connectedAgents = list()
+        self.rolemodels = list()
+        self.followers = list()
         self.index = index
