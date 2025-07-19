@@ -23,7 +23,6 @@ class Simulation(QObject):
         return round(sumValues/len(self.agentsList),2)
     
     def calculateNewOpinions(self):
-        # todo: somewhere here is a calculation error !
         for agent in self.agentsList:
             newValue = agent.weightOwnOpinion * agent.value
             for rolemodel,val in agent.rolemodels.items():

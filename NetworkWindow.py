@@ -104,7 +104,7 @@ class NetworkWindow(QWidget):
                 basicVal = round(listensTo/summe,2)
             else:
                 basicVal = 1
-            agent.weightOwnOpinion = basicVal
+            agent.weightOwnOpinion = basicVal if agent.ownOpinionMatters else 0
             for key in agent.rolemodels.keys():
                 if key.role == "influencer":
                     agent.rolemodels[key] = 2 * basicVal
