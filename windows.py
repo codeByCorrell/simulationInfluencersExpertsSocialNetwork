@@ -159,7 +159,12 @@ class NetworkWindow(QWidget):
                 else:
                     summe += 1
             if summe != 0:
-                basicVal = round(1/summe,2)
+                # influencers per default use only 50% to listen to other agents
+                if agent.role == "influencer":
+                    listensTo = 0.5
+                else:
+                    listensTo = 1
+                basicVal = round(listensTo/summe,2)
             else:
                 basicVal = 1
             agent.weightOwnOpinion = basicVal
