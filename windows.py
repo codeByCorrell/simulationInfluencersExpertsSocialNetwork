@@ -111,11 +111,12 @@ class NetworkWindow(QWidget):
             agent2Index = rd.randint(0,len(agents)-1)
             if len(agents[agent2Index].followers) < self.sim.connLim - 1 and agent1Index != agent2Index:
                 agents[agent1Index].rolemodels.append(agents[agent2Index])
-                agents[agent1Index].rolemodelIds.append(agent2Index)
+                agents[agent1Index].rolemodelIds[agent2Index] = 0
                 agents[agent2Index].followers.append(agents[agent1Index])
                 agents[agent2Index].followerIds.append(agent1Index)
                 newConn = np.array([[agent1Index,agent2Index]])
             else:
+                agents[agent1Index].ownOpinionMatters = True
                 newConn = np.array([[agent1Index,agent1Index]])
             adj = np.vstack([adj,newConn])
 
@@ -132,7 +133,7 @@ class NetworkWindow(QWidget):
                         agent.followers.append(follower)
                         agent.followerIds.append(rdAgentId)
                         follower.rolemodels.append(agent)
-                        follower.rolemodelIds.append(agent.index)
+                        follower.rolemodelIds[agent.index] = 0
                         followerCounter += 1
 
 
@@ -150,14 +151,19 @@ class NetworkWindow(QWidget):
 
         # Add labels as TextItem
         for agent in agents:
-            text = pg.TextItem(str(agent.startValue), anchor=(0.5, 0.5), color=agent.color)
+            text = pg.TextItem(str(agent.value), anchor=(0.5, 0.5), color=agent.color)
             text.setPos(agent.pos[0][0], agent.pos[0][1])
             view.addItem(text)
+            listensTo = len(agent.rolemodelIds) if not agent.ownOpinionMatters else len(agent.rolemodelIds) + 1
+            weightVal = 1 if listensTo == 0 else round(1 / listensTo,2)
+            agent.weightOwnOpinion = weightVal
+            for key,val in agent.rolemodelIds.items():
+                agent.rolemodelIds[key] = weightVal
 
         # add arrows to indicate direction of connection
-        for i, j in adj:
-            p1 = pos[i]
-            p2 = pos[j]
+        for ag1Id, ag2Id in adj:
+            p1 = pos[ag1Id]
+            p2 = pos[ag2Id]
             dx, dy = p2 - p1
             # check if self loop
             if dx == 0 and dy == 0:
@@ -171,7 +177,9 @@ class NetworkWindow(QWidget):
             angle = 180 - float(np.degrees(np.arctan2(dy, dx)))
             arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush=brushCol)
             view.addItem(arrow)
-            text = pg.TextItem("0.5", anchor=(0.5, 0.5), color='w')
+            
+            weightVal = agents[ag1Id].rolemodelIds[ag2Id] if ag1Id != ag2Id else agents[ag1Id].weightOwnOpinion
+            text = pg.TextItem(str(weightVal), anchor=(0.5, 0.5), color='w')
             text.setPos(textPos[0],textPos[1])
             view.addItem(text)
 
@@ -217,7 +225,7 @@ class Agent():
     def __init__(self,position,role,startValue,index):
         self.pos = position
         self.role = role
-        self.startValue = startValue
+        self.value = startValue
         if role == "influencer":
             self.color = 'r'
         elif role == "expert":
@@ -225,7 +233,9 @@ class Agent():
         else:
             self.color = 'b'
         self.rolemodels = list()
-        self.rolemodelIds = list()
+        self.rolemodelIds = dict()
         self.followers = list()
         self.followerIds = list()
         self.index = index
+        self.ownOpinionMatters = False
+        self.weightOwnOpinion = 0
