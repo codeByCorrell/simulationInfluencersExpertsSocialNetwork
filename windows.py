@@ -152,11 +152,22 @@ class NetworkWindow(QWidget):
             text = pg.TextItem(str(agent.value), anchor=(0.5, 0.5), color=agent.color)
             text.setPos(agent.pos[0][0], agent.pos[0][1])
             view.addItem(text)
-            listensTo = len(agent.rolemodels) if not agent.ownOpinionMatters else len(agent.rolemodels) + 1
-            weightVal = 1 if listensTo == 0 else round(1 / listensTo,2)
-            agent.weightOwnOpinion = weightVal
-            for key,val in agent.rolemodels.items():
-                agent.rolemodels[key] = weightVal
+            summe = 0 if not agent.ownOpinionMatters else 1
+            for key in agent.rolemodels.keys():
+                if key.role == "influencer":
+                    summe += 2
+                else:
+                    summe += 1
+            if summe != 0:
+                basicVal = round(1/summe,2)
+            else:
+                basicVal = 1
+            agent.weightOwnOpinion = basicVal
+            for key in agent.rolemodels.keys():
+                if key.role == "influencer":
+                    agent.rolemodels[key] = 2 * basicVal
+                else:
+                    agent.rolemodels[key] = basicVal
     
 
         # add arrows to indicate direction of connection
@@ -177,7 +188,9 @@ class NetworkWindow(QWidget):
             arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush=brushCol)
             view.addItem(arrow)
             
-            weightVal = agents[ag1Id].rolemodels[agents[ag2Id]] if ag1Id != ag2Id else agents[ag1Id].weightOwnOpinion
+            agent1 = agents[ag1Id]
+            agent2 = agents[ag2Id]
+            weightVal = agent1.rolemodels[agent2] if agent1 != agent2 else agent1.weightOwnOpinion
             text = pg.TextItem(str(weightVal), anchor=(0.5, 0.5), color='w')
             text.setPos(textPos[0],textPos[1])
             view.addItem(text)
