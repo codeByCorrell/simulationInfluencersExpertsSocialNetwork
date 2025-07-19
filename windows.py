@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QWidget,QPushButton,QVBoxLayout,QHBoxLayout,QSpinBox,QLabel,QSizePolicy,QGridLayout,QDoubleSpinBox
+from PyQt5.QtCore import pyqtSignal,QObject
 import pyqtgraph as pg
 import numpy as np
 import random as rd
@@ -87,7 +88,9 @@ class NetworkWindow(QWidget):
         self.showMaximized()
         self.setStyleSheet("background-color: black")
         self.sim = simulation
+        self.sim.updatedValues.connect(self.updateWindow)
         self.createLayout()
+        
 
     def createLayout(self):
 
@@ -112,6 +115,7 @@ class NetworkWindow(QWidget):
             val = round(rd.uniform(0.00,1.00),2) if roleStr != "expert" else self.sim.truth
             agents.append(Agent(posPair,roleStr,val,i))
             pos = np.vstack([pos,posPair])
+        self.sim.agentsList = agents
         
         # connect agents randomly
         adj = np.empty((0,2),dtype=int)
@@ -142,6 +146,7 @@ class NetworkWindow(QWidget):
                         agent.followers.append(newFollower)
                         newFollower.rolemodels[agent] = 0
                         followerCounter += 1
+        self.sim.connectionsList = adj
 
 
         # Provide dummy symbols so nodes are visible
@@ -213,6 +218,7 @@ class NetworkWindow(QWidget):
         # Buttons Section
         nextStepButton = QPushButton("Next Step",self)
         nextStepButton.setStyleSheet("background-color: blue; color: white")
+        nextStepButton.clicked.connect(self.sim.nextStep)
         addInfButton = QPushButton("Add Influencer",self)
         addInfButton.setStyleSheet("background-color: blue; color: white")
         addExpButton = QPushButton("Add Expert",self)
@@ -250,15 +256,26 @@ class NetworkWindow(QWidget):
         layout.addLayout(labelLay)
         self.setLayout(layout)
 
-class Simulation():
+    def updateWindow(self):
+        print("update Window!")
+
+class Simulation(QObject):
+    updatedValues = pyqtSignal()
 
     def __init__(self,agents:int,influencers:int,experts:int,connections:int,truth:float):
+        super().__init__()
         self.agents = agents
         self.influencers = influencers
         self.experts = experts
         self.connections = connections
         self.truth = truth
         self.connLim = round(0.2*agents,0)
+        self.agentsList = list()
+        self.connectionsList = list()
+
+    def nextStep(self):
+        print("emit signal")
+        self.updatedValues.emit()
 
 class Agent():
 
