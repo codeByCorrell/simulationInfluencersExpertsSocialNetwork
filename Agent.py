@@ -15,3 +15,8 @@ class Agent():
         self.index = index
         self.ownOpinionMatters = False
         self.weightOwnOpinion = 0
+        self.newValue = 0
+
+    def updateOpinion(self):
+        self.value = self.newValue
+        self.newValue = 0

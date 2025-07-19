@@ -13,14 +13,15 @@ class NetworkWindow(QWidget):
         self.setStyleSheet("background-color: black")
         self.sim = simulation
         self.sim.updatedValues.connect(self.updateWindow)
+        self.viewTextItems = list()
         self.createLayout()
         
 
     def createLayout(self):
 
         win = pg.GraphicsLayoutWidget(show=True)
-        view = win.addViewBox()
-        view.setAspectLocked()
+        self.view = win.addViewBox()
+        self.view.setAspectLocked()
 
         graph = pg.GraphItem() 
         # distribute agents randomly  
@@ -82,14 +83,12 @@ class NetworkWindow(QWidget):
             pxMode=True,
             symbolBrush='w'
         )
-        view.addItem(graph)
+        self.view.addItem(graph)
 
 
         # Add labels as TextItem
         for agent in agents:
-            text = pg.TextItem(str(agent.value), anchor=(0.5, 0.5), color=agent.color)
-            text.setPos(agent.pos[0][0], agent.pos[0][1])
-            view.addItem(text)
+            self.writeAgentValue()
             summe = 0 if not agent.ownOpinionMatters else 1
             for key in agent.rolemodels.keys():
                 if key.role == "influencer":
@@ -111,7 +110,7 @@ class NetworkWindow(QWidget):
                     agent.rolemodels[key] = 2 * basicVal
                 else:
                     agent.rolemodels[key] = basicVal
-    
+        self.sim.average = self.sim.getAverage()
 
         # add arrows to indicate direction of connection
         for ag1Id, ag2Id in adj:
@@ -129,56 +128,70 @@ class NetworkWindow(QWidget):
                 textPos = p1 + 0.5 * (p2 - p1)
             angle = 180 - float(np.degrees(np.arctan2(dy, dx)))
             arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush=brushCol)
-            view.addItem(arrow)
+            self.view.addItem(arrow)
             
             agent1 = agents[ag1Id]
             agent2 = agents[ag2Id]
             weightVal = agent1.rolemodels[agent2] if agent1 != agent2 else agent1.weightOwnOpinion
             text = pg.TextItem(str(weightVal), anchor=(0.5, 0.5), color='w')
             text.setPos(textPos[0],textPos[1])
-            view.addItem(text)
+            self.view.addItem(text)
 
 
         # Buttons Section
-        nextStepButton = QPushButton("Next Step",self)
-        nextStepButton.setStyleSheet("background-color: blue; color: white")
-        nextStepButton.clicked.connect(self.sim.nextStep)
-        addInfButton = QPushButton("Add Influencer",self)
-        addInfButton.setStyleSheet("background-color: blue; color: white")
-        addExpButton = QPushButton("Add Expert",self)
-        addExpButton.setStyleSheet("background-color: blue; color: white")
-        delInfButton = QPushButton("Delete Influencer",self)
-        delInfButton.setStyleSheet("background-color: red; color: white")
-        delExpButton = QPushButton("Delete Expert",self)
-        delExpButton.setStyleSheet("background-color: red; color: white")
-        stopButton = QPushButton("Stop Simulation",self)
-        stopButton.setStyleSheet("background-color: red; color: white")
+        self.nextStepButton = QPushButton("Next Step",self)
+        self.nextStepButton.setStyleSheet("background-color: blue; color: white")
+        self.nextStepButton.clicked.connect(self.sim.nextStep)
+        self.addInfButton = QPushButton("Add Influencer",self)
+        self.addInfButton.setStyleSheet("background-color: blue; color: white")
+        self.addExpButton = QPushButton("Add Expert",self)
+        self.addExpButton.setStyleSheet("background-color: blue; color: white")
+        self.delInfButton = QPushButton("Delete Influencer",self)
+        self.delInfButton.setStyleSheet("background-color: red; color: white")
+        self.delExpButton = QPushButton("Delete Expert",self)
+        self.delExpButton.setStyleSheet("background-color: red; color: white")
+        self.stopButton = QPushButton("Stop Simulation",self)
+        self.stopButton.setStyleSheet("background-color: red; color: white")
         buttonLay = QGridLayout()
-        buttonLay.addWidget(nextStepButton,0,0,1,2)
-        buttonLay.addWidget(addInfButton,1,0)
-        buttonLay.addWidget(addExpButton,1,1)
-        buttonLay.addWidget(delInfButton,2,0)
-        buttonLay.addWidget(delExpButton,2,1)
-        buttonLay.addWidget(stopButton,3,0,1,2)
+        buttonLay.addWidget(self.nextStepButton,0,0,1,2)
+        buttonLay.addWidget(self.addInfButton,1,0)
+        buttonLay.addWidget(self.addExpButton,1,1)
+        buttonLay.addWidget(self.delInfButton,2,0)
+        buttonLay.addWidget(self.delExpButton,2,1)
+        buttonLay.addWidget(self.stopButton,3,0,1,2)
       
         # Labels Section
-        truthLabel = QLabel("Truth: ",self)
-        truthLabel.setText(f"Truth: {self.sim.truth}")
-        truthLabel.setStyleSheet("color: blue")
-        avgLabel = QLabel("Average: ",self)
-        avgLabel.setStyleSheet("color: blue")
-        stepsLabel = QLabel("Steps: 0",self)
-        stepsLabel.setStyleSheet("color: blue")
-        labelLay = QHBoxLayout()
-        labelLay.addWidget(truthLabel)
-        labelLay.addWidget(avgLabel)
-        labelLay.addWidget(stepsLabel)
+        self.truthLabel = QLabel("Truth: ",self)
+        self.truthLabel.setText(f"Truth: {self.sim.truth}")
+        self.truthLabel.setStyleSheet("color: blue")
+        self.avgLabel = QLabel(f"Average: {self.sim.average}",self)
+        self.avgLabel.setStyleSheet("color: blue")
+        self.stepsLabel = QLabel("Steps: 0",self)
+        self.stepsLabel.setStyleSheet("color: blue")
+        self.labelLay = QHBoxLayout()
+        self.labelLay.addWidget(self.truthLabel)
+        self.labelLay.addWidget(self.avgLabel)
+        self.labelLay.addWidget(self.stepsLabel)
 
-        layout = QVBoxLayout()
-        layout.addWidget(win)
-        layout.addLayout(buttonLay)
-        layout.addLayout(labelLay)
-        self.setLayout(layout)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(win)
+        self.layout.addLayout(buttonLay)
+        self.layout.addLayout(self.labelLay)
+        self.setLayout(self.layout)
+
+    def writeAgentValue(self):
+        for text in self.viewTextItems:
+            self.view.removeItem(text)
+        self.viewTextItems = list()
+        for agent in self.sim.agentsList:
+            text = pg.TextItem(str(agent.value), anchor=(0.5, 0.5), color=agent.color)
+            text.setPos(agent.pos[0][0], agent.pos[0][1])
+            self.view.addItem(text)
+            self.viewTextItems.append(text)
 
     def updateWindow(self):
-        print("update Window!")
+        self.stepsLabel.setText(f"Steps: {self.sim.steps}")
+        self.avgLabel.setText(f"Average: {self.sim.average}")
+        self.writeAgentValue()
+
+        
