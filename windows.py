@@ -18,6 +18,7 @@ class StartWindow(QWidget):
         self.startButton.clicked.connect(self.startSim)
         #reset button
         self.resetButton = QPushButton("Reset",self)
+        self.resetButton.clicked.connect(self.resetValues)
         # agents section
         self.agentsLabel = QLabel("Agents: ",self)
         self.agentsLabel.setSizePolicy(QSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed))
@@ -71,12 +72,20 @@ class StartWindow(QWidget):
         self.window.show()
         self.hide()
 
+    def resetValues(self):
+        self.agentsSBox.setValue(0)
+        self.inflSBox.setValue(0)
+        self.expsSBox.setValue(0)
+        self.connSBox.setValue(0)
+        self.truthSBox.setValue(0.00)
+
 class NetworkWindow(QWidget):
 
     def __init__(self,simulation):
         super().__init__()
         self.setWindowTitle("Network Simulation")
         self.showMaximized()
+        self.setStyleSheet("background-color: black")
         self.sim = simulation
         self.createLayout()
 
@@ -200,22 +209,36 @@ class NetworkWindow(QWidget):
             text.setPos(textPos[0],textPos[1])
             view.addItem(text)
 
-        # Buttons Section
-        addInfButton = QPushButton("Add Influencer",self)
-        addExpButton = QPushButton("Add Expert",self)
-        delInfButton = QPushButton("Delete Influencer",self)
-        delExpButton = QPushButton("Delete Expert",self)
-        buttonLay = QGridLayout()
-        buttonLay.addWidget(addInfButton,0,0)
-        buttonLay.addWidget(addExpButton,0,1)
-        buttonLay.addWidget(delInfButton,1,0)
-        buttonLay.addWidget(delExpButton,1,1)
 
+        # Buttons Section
+        nextStepButton = QPushButton("Next Step",self)
+        nextStepButton.setStyleSheet("background-color: blue; color: white")
+        addInfButton = QPushButton("Add Influencer",self)
+        addInfButton.setStyleSheet("background-color: blue; color: white")
+        addExpButton = QPushButton("Add Expert",self)
+        addExpButton.setStyleSheet("background-color: blue; color: white")
+        delInfButton = QPushButton("Delete Influencer",self)
+        delInfButton.setStyleSheet("background-color: red; color: white")
+        delExpButton = QPushButton("Delete Expert",self)
+        delExpButton.setStyleSheet("background-color: red; color: white")
+        stopButton = QPushButton("Stop Simulation",self)
+        stopButton.setStyleSheet("background-color: red; color: white")
+        buttonLay = QGridLayout()
+        buttonLay.addWidget(nextStepButton,0,0,1,2)
+        buttonLay.addWidget(addInfButton,1,0)
+        buttonLay.addWidget(addExpButton,1,1)
+        buttonLay.addWidget(delInfButton,2,0)
+        buttonLay.addWidget(delExpButton,2,1)
+        buttonLay.addWidget(stopButton,3,0,1,2)
+      
         # Labels Section
         truthLabel = QLabel("Truth: ",self)
         truthLabel.setText(f"Truth: {self.sim.truth}")
+        truthLabel.setStyleSheet("color: blue")
         avgLabel = QLabel("Average: ",self)
+        avgLabel.setStyleSheet("color: blue")
         stepsLabel = QLabel("Steps: 0",self)
+        stepsLabel.setStyleSheet("color: blue")
         labelLay = QHBoxLayout()
         labelLay.addWidget(truthLabel)
         labelLay.addWidget(avgLabel)
