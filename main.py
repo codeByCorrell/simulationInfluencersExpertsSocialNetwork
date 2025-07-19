@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication
 import sys
-from windows import StartWindow,NetworkWindow
+from StartWindow import StartWindow
 
 app = QApplication(sys.argv)
 
