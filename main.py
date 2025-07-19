@@ -17,4 +17,8 @@ avg top 10: 400.4 Millionen Follower
 python rundet bis einschließlich .5 ab
 stubborn agent
 anti expert 
+wie gewichte ich die Meinungen:
+    -> gleichgewichtet 
+    -> wie gewichten influencer die Meinung anderer?
+    -> experten lassen sich gar nicht beeinflussen
 """

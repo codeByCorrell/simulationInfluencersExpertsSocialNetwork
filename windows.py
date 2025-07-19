@@ -109,13 +109,32 @@ class NetworkWindow(QWidget):
         for i in range(self.sim.connections):
             agent1Index = rd.randint(0,len(agents)-1)
             agent2Index = rd.randint(0,len(agents)-1)
-            if len(agents[agent2Index].followers) < self.sim.connLim and agent1Index != agent2Index:
+            if len(agents[agent2Index].followers) < self.sim.connLim - 1 and agent1Index != agent2Index:
                 agents[agent1Index].rolemodels.append(agents[agent2Index])
+                agents[agent1Index].rolemodelIds.append(agent2Index)
                 agents[agent2Index].followers.append(agents[agent1Index])
+                agents[agent2Index].followerIds.append(agent1Index)
                 newConn = np.array([[agent1Index,agent2Index]])
             else:
                 newConn = np.array([[agent1Index,agent1Index]])
             adj = np.vstack([adj,newConn])
+
+        # creating influencers
+        for agent in agents:
+            if agent.role == "influencer":
+                followerCounter = 0
+                while followerCounter != self.sim.connLim:
+                    rdAgentId = rd.randint(0,len(agents)-1)
+                    if rdAgentId not in agent.followerIds:
+                        newConn = np.array([[rdAgentId,agent.index]])
+                        adj = np.vstack([adj,newConn])
+                        follower = agents[rdAgentId]
+                        agent.followers.append(follower)
+                        agent.followerIds.append(rdAgentId)
+                        follower.rolemodels.append(agent)
+                        follower.rolemodelIds.append(agent.index)
+                        followerCounter += 1
+
 
         # Provide dummy symbols so nodes are visible
         graph.setData(
@@ -143,13 +162,18 @@ class NetworkWindow(QWidget):
             # check if self loop
             if dx == 0 and dy == 0:
                 brushCol = 'r'
-                arrowPos = p1 - np.array([1,0])
+                arrowPos = p1 - np.array([0.5,0])
+                textPos = p1 - np.array([0.7,0.2])
             else:
                 brushCol = 'b'
                 arrowPos = p1 + 0.95 * (p2 - p1)
+                textPos = p1 + 0.5 * (p2 - p1)
             angle = 180 - float(np.degrees(np.arctan2(dy, dx)))
             arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush=brushCol)
             view.addItem(arrow)
+            text = pg.TextItem("0.5", anchor=(0.5, 0.5), color='w')
+            text.setPos(textPos[0],textPos[1])
+            view.addItem(text)
 
         # Buttons Section
         addInfButton = QPushButton("Add Influencer",self)
@@ -201,5 +225,7 @@ class Agent():
         else:
             self.color = 'b'
         self.rolemodels = list()
+        self.rolemodelIds = list()
         self.followers = list()
+        self.followerIds = list()
         self.index = index
