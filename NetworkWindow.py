@@ -24,7 +24,7 @@ class NetworkWindow(QWidget):
         win = pg.GraphicsLayoutWidget(show=True)
         self.view = win.addViewBox()
         self.view.setAspectLocked()
-        graph = pg.GraphItem()
+        self.graph = pg.GraphItem()
 
         # add agents, connect them randomly and create influencers
         self.sim.addAgents()
@@ -32,18 +32,10 @@ class NetworkWindow(QWidget):
         self.sim.createInfluencers()
 
         # draw the actual graph
-        graph.setData(
-            pos=self.sim.positions,
-            adj=self.sim.connectionsList,
-            size=40,
-            symbol='o',
-            pxMode=True,
-            symbolBrush='w'
-        )
-        self.view.addItem(graph)
+        self.updateGraph(self.graph)
 
         # draw the agents opinions, how much they weigh other opinions and who they are listening to
-        self.drawAgentValues()
+        self.drawAgentOpinions()
         self.sim.calculateListeningWeights()
         self.drawArrowsAndWeights()
 
@@ -52,9 +44,11 @@ class NetworkWindow(QWidget):
         self.nextStepButton.setStyleSheet("background-color: blue; color: white")
         self.nextStepButton.clicked.connect(self.sim.nextStep)
         self.addInfButton = QPushButton("Add Influencer",self)
-        self.addInfButton.setStyleSheet("background-color: blue; color: white")
+        self.addInfButton.setStyleSheet("background-color: green; color: white")
+        self.addInfButton.clicked.connect(lambda: self.addAgentToView("influencer"))
         self.addExpButton = QPushButton("Add Expert",self)
-        self.addExpButton.setStyleSheet("background-color: blue; color: white")
+        self.addExpButton.setStyleSheet("background-color: green; color: white")
+        self.addExpButton.clicked.connect(lambda: self.addAgentToView("expert"))
         self.delInfButton = QPushButton("Delete Influencer",self)
         self.delInfButton.setStyleSheet("background-color: red; color: white")
         self.delExpButton = QPushButton("Delete Expert",self)
@@ -94,7 +88,7 @@ class NetworkWindow(QWidget):
         self.layout.addLayout(self.labelLay)
         self.setLayout(self.layout)
 
-    def drawAgentValues(self):
+    def drawAgentOpinions(self):
         for text in self.viewTextItems:
             self.view.removeItem(text)
         self.viewTextItems = list()
@@ -107,10 +101,11 @@ class NetworkWindow(QWidget):
     def updateWindow(self):
         self.stepsLabel.setText(f"Steps: {self.sim.step}")
         self.avgLabel.setText(f"Average: {self.sim.average}")
-        self.drawAgentValues()
+        self.drawAgentOpinions()
 
-    def drawArrowsAndWeights(self):
-        for ag1Id, ag2Id in self.sim.connectionsList:
+    def drawArrowsAndWeights(self,newConns:list = []):
+        connList = self.sim.connectionsList if len(newConns) == 0 else newConns
+        for ag1Id, ag2Id in connList:
             p1 = self.sim.positions[ag1Id]
             p2 = self.sim.positions[ag2Id]
             dx, dy = p2 - p1
@@ -134,4 +129,26 @@ class NetworkWindow(QWidget):
             text.setPos(textPos[0],textPos[1])
             self.view.addItem(text)
 
+
+    def updateGraph(self,graph:pg.GraphItem):
+        graph.setData(
+            pos=self.sim.positions,
+            adj=self.sim.connectionsList,
+            size=40,
+            symbol='o',
+            pxMode=True,
+            symbolBrush='w'
+        )
+        self.view.addItem(graph)
+
+    def addAgentToView(self,agentRole:str = "agent"):
+        newAgent = self.sim.addSingleAgent(agentRole)
+        self.sim.createConnectionsForNewAgent(newAgent)
+        if agentRole == "influencer":
+            self.sim.createInfluencers()
+        self.sim.calculateListeningWeights()
+        self.updateGraph(self.graph)
+        self.drawAgentOpinions()
+        self.drawArrowsAndWeights(newConns=self.sim.newConns)
+        self.avgLabel.setText(f"Average: {self.sim.average}")
         

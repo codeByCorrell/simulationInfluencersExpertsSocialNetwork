@@ -23,7 +23,9 @@ class Simulation(QObject):
         self.averages = list()
         self.connectionsList = np.empty((0,2),dtype=int)
         self.positions = np.empty((0,2),dtype=int)
+        self.newConns = np.empty((0,2),dtype=int)
 
+    
     def getAverage(self):
         if len(self.agentsList) == 0:
             return 0
@@ -34,17 +36,19 @@ class Simulation(QObject):
     
     def calculateNewOpinions(self):
         for agent in self.agentsList:
-            newValue = agent.weightOwnOpinion * agent.value
-            for rolemodel,val in agent.rolemodels.items():
-                newValue += val * rolemodel.value
-            agent.newValue = round(newValue,2)
+            if agent.role != "expert":
+                newValue = agent.weightOwnOpinion * agent.value
+                for rolemodel,val in agent.rolemodels.items():
+                    newValue += val * rolemodel.value
+                agent.newValue = round(newValue,2)
 
     def nextStep(self):
         self.step += 1
         self.steps.append(self.step)
         self.calculateNewOpinions()
         for agent in self.agentsList:
-            agent.updateOpinion()
+            if agent.role != "expert":
+                agent.updateOpinion()
         self.average = self.getAverage()
         self.averages.append(self.average)
         self.updatedValues.emit()
@@ -74,6 +78,22 @@ class Simulation(QObject):
             val = round(rd.uniform(0.00,1.00),2) if roleStr != "expert" else self.truth
             self.agentsList.append(Agent(posPair,roleStr,val,i))
             self.positions = np.vstack([self.positions,posPair])
+        self.average = self.getAverage()
+        self.averages.append(self.average)
+
+    def addSingleAgent(self,role:str) -> Agent:
+        x = rd.randint(0,100)
+        y = rd.randint(0,100)
+        posPair = np.array([[x,y]])
+        val = round(rd.uniform(0.00,1.00),2) if role != "expert" else self.truth
+        id = len(self.agentsList)
+        self.positions = np.vstack([self.positions,posPair])
+        newAg = Agent(posPair,role,val,id)
+        self.agentsList.append(newAg)
+        self.connLim = round(0.2*len(self.agentsList),0)
+        self.average = self.getAverage()
+        self.averages[-1] = self.average
+        return newAg
 
     def connectAgents(self):
         for i in range(self.connections):
@@ -90,19 +110,50 @@ class Simulation(QObject):
                 newConn = np.array([[agent1Index,agent1Index]])
             self.connectionsList = np.vstack([self.connectionsList,newConn])
 
+    def createConnectionsForNewAgent(self,agent:Agent):
+        self.newConns = np.empty((0,2),dtype=int)
+        newFollowersNbr = rd.randint(0,self.connLim - 1)
+        for i in range(newFollowersNbr):
+            followerId = rd.randint(0,len(self.agentsList)-1)
+            agent.ownOpinionMatters = True if agent.index == followerId else False
+            follower = self.agentsList[followerId]
+            follower.rolemodels[agent] = 0
+            agent.followers.append(follower)
+            newConn = np.array([[followerId,agent.index]])
+            self.connectionsList = np.vstack([self.connectionsList,newConn])
+            self.newConns = np.vstack([self.newConns,newConn])
+            self.connections += 1
+
+        newRolemodelsNbr = rd.randint(0,self.connLim - 1)
+        for j in range(newRolemodelsNbr):
+            rolemodelId = rd.randint(0,len(self.agentsList) - 1)
+            agent.ownOpinionMatters = True if agent.index == rolemodelId else False
+            rolemodel = self.agentsList[rolemodelId]
+            rolemodel.followers.append(agent)
+            agent.rolemodels[rolemodel] = 0
+            newConn = np.array([[agent.index,rolemodelId]])
+            self.connectionsList = np.vstack([self.connectionsList,newConn])
+            self.newConns = np.vstack([self.newConns,newConn])
+            self.connections += 1
+
+
     def createInfluencers(self):
         for agent in self.agentsList:
             if agent.role == "influencer":
-                followerCounter = 0
-                while followerCounter != self.connLim:
-                    rdAgentId = rd.randint(0,len(self.agentsList)-1)
-                    newFollower = self.agentsList[rdAgentId]
-                    if newFollower not in agent.followers:
-                        newConn = np.array([[rdAgentId,agent.index]])
-                        self.connectionsList = np.vstack([self.connectionsList,newConn])
-                        agent.followers.append(newFollower)
-                        newFollower.rolemodels[agent] = 0
-                        followerCounter += 1
+                self.makeAgentToInfluencer(agent)
+    
+    def makeAgentToInfluencer(self,agent:Agent):
+        followerCounter = 0
+        while followerCounter != self.connLim:
+            rdAgentId = rd.randint(0,len(self.agentsList)-1)
+            newFollower = self.agentsList[rdAgentId]
+            if newFollower not in agent.followers:
+                newConn = np.array([[rdAgentId,agent.index]])
+                self.connectionsList = np.vstack([self.connectionsList,newConn])
+                self.newConns = np.vstack([self.newConns,newConn])
+                agent.followers.append(newFollower)
+                newFollower.rolemodels[agent] = 0
+                followerCounter += 1
 
     def calculateListeningWeights(self):
         for agent in self.agentsList:
@@ -127,5 +178,3 @@ class Simulation(QObject):
                     agent.rolemodels[key] = 2 * basicVal
                 else:
                     agent.rolemodels[key] = basicVal
-        self.average = self.getAverage()
-        self.averages.append(self.average)
