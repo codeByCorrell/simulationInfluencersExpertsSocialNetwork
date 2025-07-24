@@ -111,6 +111,7 @@ class NetworkWindow(QWidget):
                 else:
                     agent.rolemodels[key] = basicVal
         self.sim.average = self.sim.getAverage()
+        self.sim.averages.append(self.sim.average)
 
         # add arrows to indicate direction of connection
         for ag1Id, ag2Id in adj:
@@ -150,15 +151,20 @@ class NetworkWindow(QWidget):
         self.delInfButton.setStyleSheet("background-color: red; color: white")
         self.delExpButton = QPushButton("Delete Expert",self)
         self.delExpButton.setStyleSheet("background-color: red; color: white")
-        self.stopButton = QPushButton("Stop Simulation",self)
+        self.plotButton = QPushButton("Plot Results",self)
+        self.plotButton.setStyleSheet("background-color: blue; color: white")
+        self.plotButton.clicked.connect(self.sim.plotResults)
+        self.stopButton = QPushButton("Stop Simulation")
         self.stopButton.setStyleSheet("background-color: red; color: white")
+        self.stopButton.clicked.connect(self.sim.stopSimulation)
         buttonLay = QGridLayout()
         buttonLay.addWidget(self.nextStepButton,0,0,1,2)
         buttonLay.addWidget(self.addInfButton,1,0)
         buttonLay.addWidget(self.addExpButton,1,1)
         buttonLay.addWidget(self.delInfButton,2,0)
         buttonLay.addWidget(self.delExpButton,2,1)
-        buttonLay.addWidget(self.stopButton,3,0,1,2)
+        buttonLay.addWidget(self.plotButton,3,0,1,2)
+        buttonLay.addWidget(self.stopButton,4,0,1,2)
       
         # Labels Section
         self.truthLabel = QLabel("Truth: ",self)
@@ -190,7 +196,7 @@ class NetworkWindow(QWidget):
             self.viewTextItems.append(text)
 
     def updateWindow(self):
-        self.stepsLabel.setText(f"Steps: {self.sim.steps}")
+        self.stepsLabel.setText(f"Steps: {self.sim.step}")
         self.avgLabel.setText(f"Average: {self.sim.average}")
         self.writeAgentValue()
 
