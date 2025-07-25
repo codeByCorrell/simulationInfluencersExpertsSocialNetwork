@@ -55,6 +55,7 @@ class NetworkWindow(QWidget):
         self.delInfButton.setStyleSheet("background-color: red; color: white")
         self.delExpButton = QPushButton("Delete Expert",self)
         self.delExpButton.setStyleSheet("background-color: red; color: white")
+        self.delExpButton.clicked.connect(lambda: self.deleteAgentFromView("expert"))
         self.plotButton = QPushButton("Plot Results",self)
         self.plotButton.setStyleSheet("background-color: blue; color: white")
         self.plotButton.clicked.connect(self.sim.plotResults)
@@ -164,5 +165,5 @@ class NetworkWindow(QWidget):
         self.updateGraph(self.graph)
         self.drawAgentOpinions()
         self.drawArrowsAndWeights()
-        #self.avgLabel.setText(f"Average: {self.sim.average}")
+        self.avgLabel.setText(f"Average: {self.sim.average}")
         

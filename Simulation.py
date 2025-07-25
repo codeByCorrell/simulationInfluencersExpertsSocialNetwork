@@ -207,16 +207,10 @@ class Simulation(QObject):
                     except KeyError:
                         pass
                 deletedAgent = True
-
                 break
         if not deletedAgent:
-            print(f"There is no {roleStr} left to delete!")     
-        # aus positions, agentsList, followers, rolemodels, connections list löschen
-        # window updaten
-        """
-        Problem: ich muss die Id aller agenten um eins reduzieren die größer ist als die gelöschte id
-        Ansonsten gibt es ein Problem beim erstellen der connections die ja abh von Agenten id sind
-        gibt es nur noch 14 statt ehemals 15 position pairs kann eine position mit id 15 natürlich auch nicht mehr angesteuert werden
-        dort müsste ich die ids auch alle angleichen -> deutlich zu viel aufwand -> andere Lösung gesucht
-        dummy position für gelöschte Agenten? 
-        """
+            print(f"There is no {roleStr} left to delete!") 
+        else:
+            self.connLim = round(0.2*len(self.agentsList),0)
+            self.average = self.getAverage()
+            self.averages[-1] = self.average
