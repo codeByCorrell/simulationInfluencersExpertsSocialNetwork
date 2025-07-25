@@ -178,3 +178,45 @@ class Simulation(QObject):
                     agent.rolemodels[key] = 2 * basicVal
                 else:
                     agent.rolemodels[key] = basicVal
+
+    def deleteAgent(self,roleStr:str):
+        for agent in self.agentsList:
+            deletedAgent = False
+            if agent.role == roleStr:
+                self.agentsList.remove(agent)
+                self.positions = np.delete(self.positions,agent.index,axis=0)
+                counter = 0
+                for con in self.connectionsList:
+                    if agent.index in con:
+                        self.connectionsList = np.delete(self.connectionsList,counter,axis=0)
+                    else:
+                        counter += 1
+                for idx1,con in enumerate(self.connectionsList):
+                    for idx2,idVal in enumerate(con):
+                        if idVal > agent.index:
+                            self.connectionsList[idx1][idx2] -= 1
+                for ag in self.agentsList:
+                    if ag.index > agent.index:
+                        ag.index -= 1
+                    try:
+                        ag.followers.remove(agent)
+                    except ValueError:
+                        pass
+                    try:
+                        ag.rolemodels.pop(agent)
+                    except KeyError:
+                        pass
+                deletedAgent = True
+
+                break
+        if not deletedAgent:
+            print(f"There is no {roleStr} left to delete!")     
+        # aus positions, agentsList, followers, rolemodels, connections list löschen
+        # window updaten
+        """
+        Problem: ich muss die Id aller agenten um eins reduzieren die größer ist als die gelöschte id
+        Ansonsten gibt es ein Problem beim erstellen der connections die ja abh von Agenten id sind
+        gibt es nur noch 14 statt ehemals 15 position pairs kann eine position mit id 15 natürlich auch nicht mehr angesteuert werden
+        dort müsste ich die ids auch alle angleichen -> deutlich zu viel aufwand -> andere Lösung gesucht
+        dummy position für gelöschte Agenten? 
+        """

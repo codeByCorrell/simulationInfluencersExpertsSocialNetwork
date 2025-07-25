@@ -15,6 +15,7 @@ class NetworkWindow(QWidget):
         self.sim = simulation
         self.sim.updatedValues.connect(self.updateWindow)
         self.viewTextItems = list()
+        self.viewArrowsEdgesItems = list()
         self.createLayout()
         
 
@@ -50,6 +51,7 @@ class NetworkWindow(QWidget):
         self.addExpButton.setStyleSheet("background-color: green; color: white")
         self.addExpButton.clicked.connect(lambda: self.addAgentToView("expert"))
         self.delInfButton = QPushButton("Delete Influencer",self)
+        self.delInfButton.clicked.connect(lambda: self.deleteAgentFromView("influencer"))
         self.delInfButton.setStyleSheet("background-color: red; color: white")
         self.delExpButton = QPushButton("Delete Expert",self)
         self.delExpButton.setStyleSheet("background-color: red; color: white")
@@ -103,9 +105,11 @@ class NetworkWindow(QWidget):
         self.avgLabel.setText(f"Average: {self.sim.average}")
         self.drawAgentOpinions()
 
-    def drawArrowsAndWeights(self,newConns:list = []):
-        connList = self.sim.connectionsList if len(newConns) == 0 else newConns
-        for ag1Id, ag2Id in connList:
+    def drawArrowsAndWeights(self):
+        for optic in self.viewArrowsEdgesItems:
+            self.view.removeItem(optic)
+        self.viewArrowsEdgesItems = list()
+        for ag1Id, ag2Id in self.sim.connectionsList:
             p1 = self.sim.positions[ag1Id]
             p2 = self.sim.positions[ag2Id]
             dx, dy = p2 - p1
@@ -121,6 +125,7 @@ class NetworkWindow(QWidget):
             angle = 180 - float(np.degrees(np.arctan2(dy, dx)))
             arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush=brushCol)
             self.view.addItem(arrow)
+            self.viewArrowsEdgesItems.append(arrow)
             
             agent1 = self.sim.agentsList[ag1Id]
             agent2 = self.sim.agentsList[ag2Id]
@@ -128,6 +133,7 @@ class NetworkWindow(QWidget):
             text = pg.TextItem(str(weightVal), anchor=(0.5, 0.5), color='w')
             text.setPos(textPos[0],textPos[1])
             self.view.addItem(text)
+            self.viewArrowsEdgesItems.append(text)
 
 
     def updateGraph(self,graph:pg.GraphItem):
@@ -149,6 +155,14 @@ class NetworkWindow(QWidget):
         self.sim.calculateListeningWeights()
         self.updateGraph(self.graph)
         self.drawAgentOpinions()
-        self.drawArrowsAndWeights(newConns=self.sim.newConns)
+        self.drawArrowsAndWeights()
         self.avgLabel.setText(f"Average: {self.sim.average}")
+
+    def deleteAgentFromView(self,agentRole:str = "agent"):
+        self.sim.deleteAgent(agentRole)
+        self.sim.calculateListeningWeights()
+        self.updateGraph(self.graph)
+        self.drawAgentOpinions()
+        self.drawArrowsAndWeights()
+        #self.avgLabel.setText(f"Average: {self.sim.average}")
         
