@@ -8,21 +8,24 @@ class StartWindow(QWidget):
         QWidget.__init__(self)
         self.setWindowTitle("Configurations")
         self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding,QSizePolicy.Fixed))
+        self.setStyleSheet("background-color: white;")
         self.setMinimumSize(550,250)
         self.createLayout()
 
     def createLayout(self):
         # start button
         self.startButton = QPushButton("Start",self)
+        self.startButton.setStyleSheet("background-color: green; color: white")
         self.startButton.clicked.connect(self.startSim)
         #reset button
         self.resetButton = QPushButton("Reset",self)
+        self.resetButton.setStyleSheet("background-color: red; color: white")
         self.resetButton.clicked.connect(self.resetValues)
         # agents section
         self.agentsLabel = QLabel("Agents: ",self)
         self.agentsLabel.setSizePolicy(QSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed))
         self.agentsSBox = QSpinBox(self)
-        self.agentsSBox.setMaximum(1000)
+        self.agentsSBox.setMaximum(100)
         self.settingsLay = QGridLayout()
         self.settingsLay.addWidget(self.agentsLabel,0,0)
         self.settingsLay.addWidget(self.agentsSBox,0,1)
