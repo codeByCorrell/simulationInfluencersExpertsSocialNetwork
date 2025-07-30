@@ -122,7 +122,7 @@ class NetworkWindow(QWidget):
             else:
                 brushCol = 'b'
                 arrowPos = p1 + 0.95 * (p2 - p1)
-                textPos = p1 + 0.5 * (p2 - p1)
+                textPos = p1 + 0.4 * (p2 - p1)
             angle = 180 - float(np.degrees(np.arctan2(dy, dx)))
             arrow = pg.ArrowItem(pos=arrowPos, angle=angle, headLen=30, brush=brushCol)
             self.view.addItem(arrow)

@@ -12,6 +12,8 @@ class Simulation(QObject):
         self.agents = agents
         self.influencers = influencers
         self.experts = experts
+        self.percOfInflsOverTime = [round(influencers/agents,2)]
+        self.percOfExpsOverTime = [round(experts/agents,2)]
         self.connections = connections
         self.truth = truth
         self.connLim = round(0.2*agents,0)
@@ -51,13 +53,17 @@ class Simulation(QObject):
                 agent.updateOpinion()
         self.average = self.getAverage()
         self.averages.append(self.average)
+        self.percOfExpsOverTime.append(round(self.experts/self.agents,2))
+        self.percOfInflsOverTime.append(round(self.influencers/self.agents,2))
         self.updatedValues.emit()
 
     def plotResults(self):
         plt.plot(self.steps,self.averages,label="Average Opinion")
         plt.plot(self.steps,[self.truth]*len(self.steps),label="Truth")
+        plt.plot(self.steps,self.percOfInflsOverTime,label="Percentage of influencers")
+        plt.plot(self.steps,self.percOfExpsOverTime,label="Percentage of experts")
         plt.xlabel("Steps")
-        plt.ylabel("Opinion Value")
+        plt.ylabel("Opinion Value / Percentage of influencers or experts")
         plt.title("Average Opinion and Truth over Steps")
         plt.show()
 
@@ -93,6 +99,12 @@ class Simulation(QObject):
         self.connLim = round(0.2*len(self.agentsList),0)
         self.average = self.getAverage()
         self.averages[-1] = self.average
+        if role == "influencer":
+            self.influencers += 1
+        elif role == "expert":
+            self.experts += 1
+        else:
+            self.agents += 1
         return newAg
 
     def connectAgents(self):
@@ -214,3 +226,8 @@ class Simulation(QObject):
             self.connLim = round(0.2*len(self.agentsList),0)
             self.average = self.getAverage()
             self.averages[-1] = self.average
+            if roleStr == "influencer":
+                self.influencers -= 1
+            elif roleStr == "expert":
+                self.experts -= 1
+            

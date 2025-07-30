@@ -25,7 +25,7 @@ class StartWindow(QWidget):
         self.agentsLabel = QLabel("Agents: ",self)
         self.agentsLabel.setSizePolicy(QSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed))
         self.agentsSBox = QSpinBox(self)
-        self.agentsSBox.setMaximum(100)
+        self.agentsSBox.setMaximum(50)
         self.settingsLay = QGridLayout()
         self.settingsLay.addWidget(self.agentsLabel,0,0)
         self.settingsLay.addWidget(self.agentsSBox,0,1)
@@ -45,7 +45,7 @@ class StartWindow(QWidget):
         self.connLabel = QLabel("Connections: ",self)
         self.connLabel.setSizePolicy(QSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed))
         self.connSBox = QSpinBox(self)
-        self.connSBox.setMaximum(100000)
+        self.connSBox.setMaximum(100)
         self.settingsLay.addWidget(self.connLabel,3,0)
         self.settingsLay.addWidget(self.connSBox,3,1)
         # truth section

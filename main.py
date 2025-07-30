@@ -11,6 +11,8 @@ app.exec()
 
 
 """
+15 Agenten 3 infl 2 exp 30 conn 0.2 truth
+
 https://www.demandsage.com/instagram-statistics/ -> 2 Mrd instagram users worldwide 2025
 https://www.forbesindia.com/article/explainers/most-followed-instagram-accounts-world/85649/1 -> top 10 most followers on instagram
 avg top 10: 400.4 Millionen Follower 
