@@ -27,6 +27,7 @@ class Simulation(QObject):
         self.connectionsList = np.empty((0,2),dtype=int)
         self.positions = np.empty((0,2),dtype=int)
         self.newConns = np.empty((0,2),dtype=int)
+        self.currentValues = dict()
 
     
     def getAverage(self):
@@ -38,6 +39,7 @@ class Simulation(QObject):
         return round(sumValues/len(self.agentsList),2)
     
     def calculateNewOpinions(self):
+        self.currentValues = dict()
         for agent in self.agentsList:
             if agent.role == "agent" or (agent.role == "influencer" and not self.stubbornInfls):
                 if len(agent.rolemodels) > 0:
@@ -47,6 +49,14 @@ class Simulation(QObject):
                     agent.newValue = round(newValue,2)
                 else:
                     agent.newValue = agent.value
+                val = agent.newValue
+            else:
+                val = agent.value
+            if val in self.currentValues:
+                self.currentValues[val] += 1
+            else:
+                self.currentValues[val] = 1
+
     def nextStep(self):
         self.step += 1
         self.steps.append(self.step)
@@ -61,6 +71,7 @@ class Simulation(QObject):
         self.updatedValues.emit()
 
     def plotResults(self):
+        plt.figure()
         plt.plot(self.steps,self.averages,label="Average Opinion",color="magenta")
         plt.plot(self.steps,[self.truth]*len(self.steps),label="Truth",color="blue")
         plt.plot(self.steps,self.percOfInflsOverTime,label="Percentage of influencers",color="red")
@@ -69,6 +80,17 @@ class Simulation(QObject):
         plt.ylabel("Opinion Value / Percentage of Influencers/Experts")
         plt.title("Average Opinion, Truth and Percentage of Influencers/Experts over Steps")
         plt.legend()
+        plt.figure()
+        self.currentValues = dict(sorted(self.currentValues.items()))
+        opinionValues = list()
+        opinionFreqs = list()
+        for op,freq in self.currentValues.items():
+            opinionValues.append(str(op))
+            opinionFreqs.append(freq)
+        plt.bar(opinionValues,opinionFreqs,color="blue")
+        plt.title("Distribution of Opinion Values")
+        plt.xlabel("Opinion Value")
+        plt.ylabel("Number of Occurrences")
         plt.show()
 
     def stopSimulation(self):
