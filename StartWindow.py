@@ -85,3 +85,4 @@ class StartWindow(QWidget):
         self.expsSBox.setValue(0)
         self.connSBox.setValue(0)
         self.truthSBox.setValue(0.00)
+        self.stubbornCheck.setCheckState(False)

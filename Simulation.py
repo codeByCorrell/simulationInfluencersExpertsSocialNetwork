@@ -39,12 +39,14 @@ class Simulation(QObject):
     
     def calculateNewOpinions(self):
         for agent in self.agentsList:
-            if agent.role != "expert":
-                newValue = agent.weightOwnOpinion * agent.value
-                for rolemodel,val in agent.rolemodels.items():
-                    newValue += val * rolemodel.value
-                agent.newValue = round(newValue,2)
-
+            if agent.role == "agent" or (agent.role == "influencer" and not self.stubbornInfls):
+                if len(agent.rolemodels) > 0:
+                    newValue = agent.weightOwnOpinion * agent.value
+                    for rolemodel,val in agent.rolemodels.items():
+                        newValue += val * rolemodel.value
+                    agent.newValue = round(newValue,2)
+                else:
+                    agent.newValue = agent.value
     def nextStep(self):
         self.step += 1
         self.steps.append(self.step)
