@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget,QPushButton,QVBoxLayout,QSpinBox,QLabel,QSizePolicy,QGridLayout,QDoubleSpinBox
+from PyQt5.QtWidgets import QWidget,QPushButton,QVBoxLayout,QSpinBox,QLabel,QSizePolicy,QGridLayout,QDoubleSpinBox,QCheckBox
 from Simulation import Simulation
 from NetworkWindow import NetworkWindow
 
@@ -56,9 +56,13 @@ class StartWindow(QWidget):
         self.truthSBox.setMaximum(1.0)
         self.settingsLay.addWidget(self.truthLabel,4,0)
         self.settingsLay.addWidget(self.truthSBox,4,1)
+        # stubborn influencers section
+        self.stubbornCheck = QCheckBox("Stubborn influencers",self)
+        self.stubbornCheck.setCheckState(False)
         # main layout
         self.layMain = QVBoxLayout(self)
         self.layMain.addLayout(self.settingsLay)
+        self.layMain.addWidget(self.stubbornCheck)
         self.layMain.addWidget(self.resetButton)
         self.layMain.addWidget(self.startButton)
         self.setLayout(self.layMain)
@@ -69,7 +73,8 @@ class StartWindow(QWidget):
         experts = self.expsSBox.value()
         connections = self.connSBox.value()
         truth = self.truthSBox.value()
-        sim = Simulation(agents,influencers,experts,connections,truth)
+        areStub = self.stubbornCheck.isChecked()
+        sim = Simulation(agents,influencers,experts,connections,truth,areStub)
         self.window = NetworkWindow(sim)
         self.window.show()
         self.hide()

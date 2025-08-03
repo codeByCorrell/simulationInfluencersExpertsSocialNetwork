@@ -7,15 +7,16 @@ from Agent import Agent
 class Simulation(QObject):
     updatedValues = pyqtSignal()
 
-    def __init__(self,agents:int,influencers:int,experts:int,connections:int,truth:float):
+    def __init__(self,agents:int,influencers:int,experts:int,connections:int,truth:float,stubbornInfls:bool):
         super().__init__()
         self.agents = agents
         self.influencers = influencers
         self.experts = experts
-        self.percOfInflsOverTime = [round(influencers/agents,2)]
-        self.percOfExpsOverTime = [round(experts/agents,2)]
+        self.percOfInflsOverTime = [round(influencers/agents,2)] if agents != 0 else 0
+        self.percOfExpsOverTime = [round(experts/agents,2)] if agents != 0 else 0
         self.connections = connections
         self.truth = truth
+        self.stubbornInfls = stubbornInfls
         self.connLim = round(0.2*agents,0)
         self.agentsList = list()
         self.connectionsList = list()
@@ -49,7 +50,7 @@ class Simulation(QObject):
         self.steps.append(self.step)
         self.calculateNewOpinions()
         for agent in self.agentsList:
-            if agent.role != "expert":
+            if agent.role == "agent" or (agent.role == "influencer" and not self.stubbornInfls):
                 agent.updateOpinion()
         self.average = self.getAverage()
         self.averages.append(self.average)
@@ -58,13 +59,14 @@ class Simulation(QObject):
         self.updatedValues.emit()
 
     def plotResults(self):
-        plt.plot(self.steps,self.averages,label="Average Opinion")
-        plt.plot(self.steps,[self.truth]*len(self.steps),label="Truth")
-        plt.plot(self.steps,self.percOfInflsOverTime,label="Percentage of influencers")
-        plt.plot(self.steps,self.percOfExpsOverTime,label="Percentage of experts")
+        plt.plot(self.steps,self.averages,label="Average Opinion",color="magenta")
+        plt.plot(self.steps,[self.truth]*len(self.steps),label="Truth",color="blue")
+        plt.plot(self.steps,self.percOfInflsOverTime,label="Percentage of influencers",color="red")
+        plt.plot(self.steps,self.percOfExpsOverTime,label="Percentage of experts",color="green")
         plt.xlabel("Steps")
-        plt.ylabel("Opinion Value / Percentage of influencers or experts")
-        plt.title("Average Opinion and Truth over Steps")
+        plt.ylabel("Opinion Value / Percentage of Influencers/Experts")
+        plt.title("Average Opinion, Truth and Percentage of Influencers/Experts over Steps")
+        plt.legend()
         plt.show()
 
     def stopSimulation(self):
