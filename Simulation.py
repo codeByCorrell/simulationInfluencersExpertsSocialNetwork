@@ -118,6 +118,8 @@ class Simulation(QObject):
         y = rd.randint(0,100)
         posPair = np.array([[x,y]])
         val = round(rd.uniform(0.00,1.00),2) if role != "expert" else self.truth
+        if role == "influencer":
+            print(f"val: {val}")
         id = len(self.agentsList)
         self.positions = np.vstack([self.positions,posPair])
         newAg = Agent(posPair,role,val,id)
@@ -211,6 +213,11 @@ class Simulation(QObject):
             else:
                 basicVal = 1
             agent.weightOwnOpinion = basicVal if agent.ownOpinionMatters else 0
+            if agent.role == "influencer":
+                if agent.weightOwnOpinion <= 0.5:
+                    agent.weightOwnOpinion += 0.5
+                else:
+                    agent.weightOwnOpinion = 1
             for key in agent.rolemodels.keys():
                 if key.role == "influencer":
                     agent.rolemodels[key] = 2 * basicVal
