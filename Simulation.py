@@ -108,6 +108,8 @@ class Simulation(QObject):
             else:
                 roleStr = "agent"
             val = round(rd.uniform(0.00,1.00),2) if roleStr != "expert" else self.truth
+            if roleStr == "influencer":
+                print(f"influener opinion: {val}")
             self.agentsList.append(Agent(posPair,roleStr,val,i))
             self.positions = np.vstack([self.positions,posPair])
         self.average = self.getAverage()
@@ -119,7 +121,7 @@ class Simulation(QObject):
         posPair = np.array([[x,y]])
         val = round(rd.uniform(0.00,1.00),2) if role != "expert" else self.truth
         if role == "influencer":
-            print(f"val: {val}")
+            print(f"influener opinion: {val}")
         id = len(self.agentsList)
         self.positions = np.vstack([self.positions,posPair])
         newAg = Agent(posPair,role,val,id)
